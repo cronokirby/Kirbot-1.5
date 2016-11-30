@@ -48,4 +48,4 @@ async def on_message(message):
         await client.send_message(message.channel, embed=EM)
 
 # This is the oauth token
-client.run("MjUxNzc4ODI3NjA3MzQzMTA0.CxvEXw.F-4iBCTslMSqfruNMbsSgWp_Kak")
+client.run(token)
