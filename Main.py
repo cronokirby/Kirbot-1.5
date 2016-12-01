@@ -5,6 +5,8 @@ import random
 import emoji
 # commands
 import Commands
+# commands from the permission database
+import Permissions_DB.Permission_Commands as PermCommands
 # setting up error logging (for the Discord api)
 logging.basicConfig(level=logging.INFO)
 
@@ -18,7 +20,8 @@ EmbedCommands = {
     "!categories": Commands.categories,
     "!search": Commands.search,
     "!wr": Commands.wr,
-    "!streaminfo": Commands.streaminfo}
+    "!streaminfo": Commands.streaminfo,
+    "!permissions": PermCommands.permissions}
 
 
 @client.event
@@ -48,4 +51,4 @@ async def on_message(message):
         await client.send_message(message.channel, embed=EM)
 
 # This is the oauth token
-client.run(token)
+client.run(#supply your own here)
