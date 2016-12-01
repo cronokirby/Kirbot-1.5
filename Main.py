@@ -47,5 +47,5 @@ async def on_message(message):
         EM.set_footer(text=message.content)
         await client.send_message(message.channel, embed=EM)
 
-# This is the oauth token
+# This is the oauth token, you'll need to supply your own ofc
 client.run(token)
