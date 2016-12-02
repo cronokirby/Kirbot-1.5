@@ -226,9 +226,11 @@ def streaminfo(author, message):
             Embed.set_thumbnail(url=Info["logo"])
             Hours = str(Info["uptime"]["Hours"])
             Minutes = str(Info["uptime"]["Minutes"])
-            HourString, MinuteString = "hour", "minute"
+            HourString = "**{}** hour".format(Hours)
+            MinuteString = "& **{}** minute".format(Minutes)
             if int(Hours) == 0:
                 HourString = ""
+                MinuteString = MinuteString[2:]
             # This implies that if int(Hours) == 1, no "s" is needed
             elif int(Hours) > 1:
                 HourString += "s"
@@ -237,8 +239,7 @@ def streaminfo(author, message):
             elif int(Minutes) > 1:
                 MinuteString += "s"
             # This is a different Uptime, will be used in the iterator.
-            Info["uptime"] = "**{}** {} & **{}** {}".format(
-                Hours, HourString, Minutes, MinuteString)
+            Info["uptime"] = "{} {}".format(HourString, MinuteString)
             for setting, boolean in sorted(settings.items()):
                 if boolean:
                     if setting != "preview":
