@@ -4,7 +4,7 @@ import logging
 import random
 import emoji
 # commands
-import Commands
+import Commands, CT_Commands
 # commands from the permission database
 import Permissions_DB.Permission_Commands as PermCommands
 # setting up error logging (for the Discord api)
@@ -28,9 +28,9 @@ EmbedCommands = {
 async def on_message(message):
     # This is an object. Name should be fetched with .name, not str(author)!
     author = message.author
-    # Adds a reaction to messages at random
-    RandomNum = random.randrange(1, 100)
-    if RandomNum < 13:
+    # shifts the RNG table index by one, and gets a random num.
+    RandomNum = CT_Commands.updateRNG()
+    if RandomNum < 33:
         Reactions = [emoji.emojize(":whale:"), emoji.emojize(":dolphin:")]
         Reaction = Reactions[RandomNum % 2]
         await client.add_reaction(message, Reaction)
@@ -51,4 +51,4 @@ async def on_message(message):
         await client.send_message(message.channel, embed=EM)
 
 # This is the oauth token
-client.run(#supply your own here)
+client.run("MjUxNzc4ODI3NjA3MzQzMTA0.CxvEXw.F-4iBCTslMSqfruNMbsSgWp_Kak")
