@@ -6,106 +6,110 @@ which is then used in a client.send_message coroutine
 """
 
 import discord
-from SRCOM_API2 import fetchabbreviation, fetchcategories, fetchtime
+from Speedrun_API import fetchabbreviation, fetchcategories, fetchtime
 from Twitch_API import fetchstreaminfo
 
 
-def test(author, message):
-    S = '{}, what is a *test* ? :whale2:'.format(author.name)
-    Embed = discord.Embed(description=S, colour=0x42eef4)
+async def test(author, message):
+    msg = '{}, what is a *test* ? :whale2:'.format(author.name)
+    Embed = discord.Embed(description=msg, colour=0x42eef4)
     Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
     return Embed
 
 
-def search(author, message):
+async def search(author, message):
 
     # Because the correct syntax is "!search game"
     name = message.content.split(' ', 1)[-1]
-    abb = fetchabbreviation(name)
+    abb = await fetchabbreviation(name)
 
     # This happens if the URL constructed doesn't exist
     # This *usually* means the game doesn't exist either.
     if abb != "Invalid game name":
         # The last part removes the # identifier from the name.
-        S = "The abbreviation for \"{}\" is **{}**, {}".format(
+        msg = "The abbreviation for \"{}\" is **{}**, {}".format(
             name, abb, author.name)
     else:
-        S = "I couldn't find this game :/"
+        msg = "I couldn't find this game :/"
 
-    Embed = discord.Embed(description=S, colour=0x42eef4)
+    Embed = discord.Embed(description=msg, colour=0x42eef4)
     Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
     return Embed
 
 
-def categories(author, message):
+async def categories(author, message):
     # checks whether or not the syntax is '!categories abbreviation/"Game Name"
     if len(message.content.split('"')) > 1:
-        G = message.content.split('"')[1]
-        game = fetchabbreviation(G)
+        game_name = message.content.split('"')[1]
+        game = await fetchabbreviation(game_name)
     else:
         game = message.content.split(' ')[1]
 
-    C = fetchcategories(game)
-    if C != "Invalid game name":
-        Keys = [key for key in dict.keys(C)]
-        S = "Here's a list of valid categories for '{}', {} :)\n".format(
+    categories = await fetchcategories(game)
+    if categories != "Invalid game name":
+        Keys = [key for key in dict.keys(categories)]
+        msg = "Here's a list of valid categories for '{}', {} :)\n".format(
             game, author, author.name)
         for item in Keys:
-            S += '"{}"\n'.format(item)
+            msg += '"{}"\n'.format(item)
     else:
-        S = "Woops, looks like the game name is wrong D:"
+        msg = "Woops, looks like the game name is wrong D:"
 
-    Embed = discord.Embed(description=S, colour=0x42eef4)
+    Embed = discord.Embed(description=msg, colour=0x42eef4)
     Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
     return Embed
 
 
-def wr(author, message):
+async def wr(author, message):
     if len(message.content.split('"')) > 1:
-        G = message.content.split('"')[1]
-        game = fetchabbreviation(G)
+        game_name = message.content.split('"')[1]
+        game = await fetchabbreviation(game_name)
         category = message.content.split('"')[2][1:]
     else:
         category = message.content.split(' ', 2)[2]
         game = message.content.split(' ', 2)[1]
-    categories = fetchcategories(game)
+    categories = await fetchcategories(game)
     if categories != "Invalid game name":
         if category in categories:
-            f = fetchtime(game, category, 0)
+            f = await fetchtime(game, category, 0)
             if not("name" in f):
-                S = "There don't seem to be any times here..."
+                msg = "There don't seem to be any times here..."
             else:
                 name = f["name"]
                 time = f["time"]
                 vod = f["vod"]
-                S = "The **WR** is **{}** by **{}** :whale2:\n<{}>".format(
+                msg = "The **WR** is **{}** by **{}** :whale2:\n<{}>".format(
                     time, name, vod)
         elif category == "All":
-            S = 'Here are all the **WR** times for "{}" :\n'.format(game)
+            msg = 'Here are all the **WR** times for "{}" :\n'.format(game)
+            Embed = discord.Embed(description=msg, colour=0x42eef4)
+            Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
             Cats = dict.keys(categories)
             for item in Cats:
-                f = fetchtime(game, item, 0)
+                f = await fetchtime(game, item, 0)
                 if "name" in f:
                     name = f["name"]
                     time = f["time"]
-                    S += "*{}*:   **{}** by **{}**\n".format(item, time, name)
+                    field_desc = "**{}** by **{}**\n".format(time, name)
+                    Embed.add_field(name=item, value=field_desc)
+            return Embed
         else:
-            S = ("Woops, that category doesn't seem to exist.\n"
-                 'You can use "!categories game" for a list of categories')
+            msg = ("Woops, that category doesn't seem to exist.\n"
+                   'You can use "!categories game" for a list of categories')
     else:
-        S = ("Woops, that's an invalid game name.\n"
-             'The correct syntax for this command is "!wr game category"')
+        msg = ("Woops, that's an invalid game name.\n"
+               'The correct syntax for this command is "!wr game category"')
 
-    Embed = discord.Embed(description=S, colour=0x42eef4)
+    Embed = discord.Embed(description=msg, colour=0x42eef4)
     Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
     return Embed
 
 
-def time(author, message):
+async def time(author, message):
 
     if len(message.content.split('"')) > 1:
-        G = message.content.split('"')[1]
-        game = fetchabbreviation(G)
+        game_name = message.content.split('"')[1]
+        game = fetchabbreviation(game_name)
         category = message.content.split('"')[2][1:]
         command = message.content.split('"')[0][:-1]
         rank = int(command[1:-2])
@@ -115,7 +119,7 @@ def time(author, message):
         command = message.content.split(' ')[0]
         rank = int(command[1:-2])
 
-    categories = fetchcategories(game)
+    categories = await fetchcategories(game)
     if categories != "Invalid game name":
 
         if category in categories:
@@ -128,64 +132,67 @@ def time(author, message):
                 place = "last"
             else:
                 place = command[2:5 + len(str(rank)) - 1] + " to last"
-            f = fetchtime(game, category, rank)
+            f = await fetchtime(game, category, rank)
             if not("name" in f):
-                S = ("There don't seem to be any times here...")
+                msg = ("There don't seem to be any times here...")
             else:
                 name = f["name"]
                 time = f["time"]
                 vod = f["vod"]
                 if rank != 0:
-                    S = ("""The **{}** place time is **{}** by **{}** :whale2:
+                    msg = ("""The **{}** place time is **{}** by **{}** :whale2:
                     <{}>""").format(place, time, name, vod)
                 else:
-                    S = "The **WR** is **{}** by **{}** :whale2:\n<{}>".format(
-                        time, name, vod)
+                    msg = ("The **WR** is **{}** by **{}** :whale2:\n"
+                           "<{}>").format(time, name, vod)
 
         elif category == "All":
             if rank > 0:
                 place = command[1:4 + len(str(rank)) - 1]
                 rank -= 1
                 if rank != 0:
-                    S = "Here are all the **{}** place times for {}:\n".format(
-                        place, game)
+                    msg = ("Here are all the **{}** place times for "
+                           "{}:\n").format(place, game)
                 else:
-                    S = "Here are all the **WR** times for {}:\n".format(
+                    msg = "Here are all the **WR** times for {}:\n".format(
                         place, game)
             elif rank == 0:
                 return "0 isn't a rank, silly x)"
             elif rank == -1:
                 place = "last"
-                S = "Here are all the **{}** place times for {}:\n".format(
+                msg = "Here are all the **{}** place times for {}:\n".format(
                     place, game)
             else:
                 place = command[2:5 + len(str(rank)) - 1]
-                S = ("Here are all the **{}** to last**"
-                     "place times for {}:\n").format(place, game)
-
+                msg = ("Here are all the **{}** to last**"
+                       "place times for {}:\n").format(place, game)
+            Embed = discord.Embed(description=msg, colour=0x42eef4)
+            Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
             Cats = dict.keys(categories)
             for item in Cats:
-                f = fetchtime(game, item, rank)
+                f = await fetchtime(game, item, rank)
                 if "name" in f:
                     name = f["name"]
                     time = f["time"]
-                    S += "*{}*:   **{}** by **{}**\n".format(item, time, name)
+                    field_desc = "**{}** by **{}**\n".format(time, name)
+                    Embed.add_field(name=item, value=field_desc)
+            return Embed
         else:
-            S = '''Woops, that category doesn't seem to exist.
+            msg = '''Woops, that category doesn't seem to exist.
             You can use "!categories game" for a list of valid categories'''
     else:
-        S = '''Woops, that's an invalid game name.
+        msg = '''Woops, that's an invalid game name.
         The correct syntax for this command is "!wr game category"'''
 
-    Embed = discord.Embed(description=S, colour=0x42eef4)
+    Embed = discord.Embed(description=msg, colour=0x42eef4)
     Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
     return Embed
 
 
-def streaminfo(author, message):
+async def streaminfo(author, message):
     # example command: !streaminfo cronokirby -> twitch.tv/cronokirby
     name = message.content.split(" ")[1]
-    Info = fetchstreaminfo(name)
+    Info = await fetchstreaminfo(name)
     valid_extra_arguments = ["status", "game", "uptime", "viewers", "preview"]
     settings = {key: True for key in valid_extra_arguments}
     # e.g. !streaminfo name /preview won't display preview * is only that field
@@ -204,11 +211,8 @@ def streaminfo(author, message):
         if arg_type:
             settings = {key: False for key in valid_extra_arguments}
         # checking if any of the arguments is bad
-        print(extra_args)
         for item in extra_args:
-            print(item)
             if not(item in valid_extra_arguments):
-                print(2)
                 S = ('"{}" is not a valid extra argument :/\n'
                      'Here is a list of valid arguments:\n'
                      '`{}`').format(item, ", ".join(valid_extra_arguments))
