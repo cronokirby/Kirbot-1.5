@@ -3,8 +3,6 @@ These functions serve as the intermediary between messages in chat, and the
 manipulation of the Stream_Link_Database.
 All of these commands are of permission level 1
 """
-import re
-
 import discord
 # to check if streams exist mainly
 from Twitch_API import findstream
