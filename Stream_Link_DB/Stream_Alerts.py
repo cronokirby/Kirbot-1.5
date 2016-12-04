@@ -4,7 +4,7 @@ calls functions from this module at a set interval.
 """
 import discord
 # Database functions
-from Stream_Link_DB.DB_Manipulation import fetchservers, fetchserverinfo
+from Stream_Link_DB.DB_Manipulation import fetchenabledservers, fetchserverinfo
 
 
 # This gets called periodically in Main. It returns a list of embeds + channels
@@ -12,7 +12,7 @@ from Stream_Link_DB.DB_Manipulation import fetchservers, fetchserverinfo
 def alert_generator(old_streams):
     # a list of messages, each being a dict with 'channel' and 'embed' to send
     messages = []
-    for serverid in fetchservers():
+    for serverid in fetchenabledservers():
         server_info = fetchserverinfo(serverid)
         # each element in live streams contains the info of the stream
         new_streams = server_info['live_streams']

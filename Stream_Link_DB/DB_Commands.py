@@ -5,11 +5,12 @@ All of these commands are of permission level 1
 """
 import discord
 # to check if streams exist mainly
-from Twitch_API import findstream
+from Twitch_API import fetchstreaminfolist
 
 from Permissions_DB.Permission_Commands import badpermissionembed
 from Permissions_DB.Perm_DB_Manipulation import checkpermissions
-from Stream_Link_DB.DB_Manipulation import (addstream, fetchserverinfo,
+from Stream_Link_DB.DB_Manipulation import (addstream, removestream,
+                                            fetchserverinfo,
                                             enableserver, disableserver,
                                             registerserver)
 # the permission level for certain commands here
@@ -27,7 +28,8 @@ def live(server):
     if len(live_streams) > 24:
         description += ("*there are more than 24 streams live atm,"
                         "and I couldn't display them all* :/")
-        extra_streams = live_streams[24:]
+        extra_streams = [strm['twitch_name'] for strm in live_streams[24:]]
+        ','.join(extra_streams)
         live_streams = live_streams[:24]
 
     Embed = discord.Embed(description=description, colour=0x9e42f4)
@@ -59,6 +61,9 @@ def info():
                   '\nThe correct syntax for this command is: '
                   '`!streams add twitchname1, twitchname2` '
                   "*spaces aren't necessary, but allowed*")
+    field2_5desc = ("This command removes a stream from the server's list\n"
+                    "The correct syntax for this command is: "
+                    "`!streams remove twitchname`")
     field3desc = ('This command returns a list of streams currently live\n'
                   'Since the max field count for embeds is 25, it can only'
                   ' fully format 25 streams in the message')
@@ -68,7 +73,8 @@ def info():
     field5desc = ("Alerts are disabled by default, but if you want to disable "
                   "them after they've been enabled, use this command.")
     fields = [{'title': '`!streams add`', 'value': field1desc},
-              {'title': '`!streams add`s', 'value': field2desc},
+              {'title': '`!streams adds`', 'value': field2desc},
+              {'title': '`!streams remove`', 'value': field2_5desc},
               {'title': '`!streams live`', 'value': field3desc},
               {'title': '`!streams enable`', 'value': field4desc},
               {'title': '`!streams disable`', 'value': field5desc}]
@@ -97,17 +103,19 @@ def streamcount(server):
 
 
 # if the user does !streams add, list will be of size 1
-def addstreams(server, requester, streams_to_add):
+async def addstreams(server, requester, streams_to_add):
     if checkpermissions(server.id, permission_level, requester) is False:
         return badpermissionembed(server, permission_level)
-    valid_streams, invalid_streams = [], []
-    for twitchname in streams_to_add:
-        print(twitchname)
-        if findstream(twitchname) is not False:
-            addstream(server.id, twitchname)
-            valid_streams.append(twitchname)
-        else:
-            invalid_streams.append(twitchname)
+    # Won't fetch names that aren't on twitch
+    print(streams_to_add)
+    stream_info_list = await fetchstreaminfolist(streams_to_add)
+    valid_streams = [strm['twitch_name'] for strm in stream_info_list]
+    invalid_streams = [name for name in streams_to_add
+                       if not(name in set(valid_streams))]
+
+    for twitch_name in valid_streams:
+        addstream(server.id, twitch_name)
+
     color = 0x42eef4
     if len(valid_streams) == 0 :
         color = 0xb01e1e
@@ -117,12 +125,28 @@ def addstreams(server, requester, streams_to_add):
             S = "I couldn't find any of these streams on twitch :/"
     else:
         valid_string = ', '.join(valid_streams)
-        S = 'Added `{}` to the streamlist in {}\n'.format(
+        S = 'Added `{}` to the streamlist in `{}`\n'.format(
             valid_string, server.name)
         if len(invalid_streams) != 0:
             invalid_string = ', '.join(invalid_streams)
             S += ("The following streams couldn't be found on twitch:\n"
                   "`{}`".format(invalid_string))
+    Embed = discord.Embed(description=S, colour=color)
+    return Embed
+
+
+def remove(server, requester, stream_name):
+    if checkpermissions(server.id, permission_level, requester) is False:
+        return badpermissionembed(server, permission_level)
+    if stream_name in set(fetchserverinfo(server.id)['streamlist']):
+        removestream(server.id, stream_name)
+        color = 0x42eef4
+        S = 'Removed `{}` from the streamlist in `{}`\n'.format(
+            stream_name, server.name)
+    else:
+        color = 0xb01e1e
+        S = "`{}` wasn't in `{}`'s streamlist".format(stream_name, server.name)
+
     Embed = discord.Embed(description=S, colour=color)
     return Embed
 
@@ -176,10 +200,15 @@ async def streams(author, message):
     elif args[1] == 'add':
         # args[2] is the twitchname
         streamtoadd = args[2].lower()
-        return addstreams(server, author, [streamtoadd])
+        return await addstreams(server, author, [streamtoadd])
     # !streams adds
     elif args[1] == 'adds':
-        args[2].replace(" ", "")
-        streamstoadd = args[2].lower()
+        streamstoadd = args[2].replace(" ", "")
+        print(streamstoadd)
+        streamstoadd = streamstoadd.lower()
         streamstoadd = streamstoadd.split(",")
-        return addstreams(server, author, streamstoadd)
+        return await addstreams(server, author, streamstoadd)
+    # !streams remove
+    elif args[1] == 'remove':
+        stream_to_remove = args[2].lower()
+        return remove(server, author, stream_to_remove)
