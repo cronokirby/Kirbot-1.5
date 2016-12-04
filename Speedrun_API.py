@@ -78,7 +78,7 @@ async def fetchtime(game, category, rank):
                     if value == variable:
                         RunData.append(run)
     RunCount = len(RunData)
-    if not(rank in set(range(-RunCount, RunCount - 1))):
+    if not(rank in set(range(-RunCount, RunCount + 1))):
         return "bad rank"
     RunValues = []
     Runs = {}
