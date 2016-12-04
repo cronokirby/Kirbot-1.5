@@ -77,16 +77,12 @@ async def fetchstreaminfo(name):
 # used to fetch multiple streams at once
 async def fetchstreaminfolist(name_list):
     url = 'https://api.twitch.tv/kraken/streams?channel='
-    url += name_list[0]
-    for name in name_list[1:]:
-        url += ','
-        url += name
+    url += ','.join(name_list)
     async with aiohttp.ClientSession() as client:
         async with client.get(url=url, headers=headers) as r:
             Data = await r.json()
     # This will be used to calculate stream uptime
     Current_Time = datetime.utcnow()
-
     streams = []
     for stream_info in Data['streams']:
         creation_datetime = stream_info["created_at"]
@@ -109,6 +105,7 @@ async def fetchstreaminfolist(name_list):
             'viewers': stream_info["viewers"],
             'preview': stream_info["preview"]["medium"],
             'display_name': stream_info["channel"]["display_name"],
+            'twitch_name': stream_info["channel"]["name"],
             'status': stream_info["channel"]["status"],
             'logo' : stream_info["channel"]["logo"]}
 
