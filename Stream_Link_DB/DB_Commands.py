@@ -14,10 +14,6 @@ from Permissions_DB.Perm_DB_Manipulation import checkpermissions
 from Stream_Link_DB.DB_Manipulation import (addstream, fetchserverinfo,
                                             enableserver, disableserver,
                                             registerserver)
-
-
-# e.g. Cronokirby#4567
-discord_name_regex = re.compile('\D+#[0-9][0-9][0-9][0-9]')
 # the permission level for certain commands here
 permission_level = 1
 
