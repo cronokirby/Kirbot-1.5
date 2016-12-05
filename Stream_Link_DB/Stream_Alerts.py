@@ -12,16 +12,18 @@ from Stream_Link_DB.DB_Manipulation import fetchenabledservers, fetchserverinfo
 def alert_generator(old_streams):
     # a list of messages, each being a dict with 'channel' and 'embed' to send
     messages = []
+    old_stream_list = {}
     for serverid in fetchenabledservers():
+        print('fetching: {}'.format(serverid))
         server_info = fetchserverinfo(serverid)
         # each element in live streams contains the info of the stream
         new_streams = server_info['live_streams']
+        old_stream_list[serverid] = new_streams
         # this happens on the first time this gets called
-        if old_streams is None:
-            return {'messages': messages, 'streams': new_streams}
-        else:
+        if old_streams is not None:
+            olds = old_streams[serverid]
             # we want to alert streams that are in the new stream list only
-            old_statuses = [strm['status'] for strm in old_streams]
+            old_statuses = [strm['status'] for strm in olds]
             for stream in new_streams:
                 if not(stream['status'] in old_statuses):
                     Embed = discord.Embed(description="", colour=0x9e42f4)
@@ -34,4 +36,4 @@ def alert_generator(old_streams):
                     msg = {'embed': Embed,
                            'channel': server_info['channel']}
                     messages.append(msg)
-            return {'messages': messages, 'streams': new_streams}
+    return {'messages': messages, 'servers': old_stream_list}
