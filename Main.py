@@ -26,7 +26,8 @@ async def alerts(interval):
         await Stream_Database.updatestreamlists()
         print('streams updated')
         alerts = Stream_Alerts.alert_generator(old_streams)
-        old_streams = alerts['streams']
+        print(alerts['messages'])
+        old_streams = alerts['servers']
         for message in alerts['messages']:
             await client.send_message(client.get_channel(message['channel']),
                                       embed=message['embed'])
