@@ -66,6 +66,9 @@ def disableserver(serverid):
 def addstream(serverid, twitchname):
     if not(twitchname in set(Data['data']['servers'][serverid]['streamlist'])):
         Data['data']['servers'][serverid]['streamlist'].append(twitchname)
+        # if the name isn't in the query, .get returns 0
+        name_count = 1 + (Data['data']['stream_query'].get(twitchname, 0))
+        Data['data']['stream_query'][twitchname] = name_count
         with open(SLDataBase, 'w') as fp:
             json.dump(Data, fp)
 
@@ -73,6 +76,10 @@ def addstream(serverid, twitchname):
 def removestream(serverid, twitchname):
     if twitchname in set(Data['data']['servers'][serverid]['streamlist']):
         Data['data']['servers'][serverid]['streamlist'].remove(twitchname)
+        if Data['data']['stream_query'][twitchname] == 1:
+            Data['data']['stream_query'].pop(twitchname)
+        else:
+            Data['data']['stream_query'][twitchname] -= 1
         with open(SLDataBase, 'w') as fp:
             json.dump(Data, fp)
 
@@ -86,13 +93,18 @@ def fetchserverinfo(serverid):
         return serverinfo
 
 
-# iterates over all the servers, and adds a list of all streams currently Live
-# to their live_streams list. The bot calls this directly.
+# Updates the live_stream list of every server
 async def updatestreamlists():
-    servers = Data['data']['enabledservers']
-    for server in servers:
-        stream_list = set(fetchserverinfo(server)['streamlist'])
-        list_info = await fetchstreaminfolist(stream_list)
-        Data['data']['servers'][server]['live_streams'] = list_info
-        with open(SLDataBase, 'w') as fp:
-            json.dump(Data, fp)
+    # All the streams shared by servers
+    streams_to_query = [stream for stream in Data['data']['stream_query']]
+    # One call to twitch for all servers
+    stream_info = await fetchstreaminfolist(streams_to_query)
+    for server in Data['data']['enabledservers']:
+        stream_list = Data['data'][server]['streamlist']
+        # This filters out the streams not in the server.
+        live_streams = [stream for stream in stream_info
+                        if stream['twitch_name'] in set(stream_list)]
+        Data['data'][server]['live_streams'] = live_streams
+    with open(SLDataBase, 'w') as fp:
+        json.dump(Data, fp)
+        
