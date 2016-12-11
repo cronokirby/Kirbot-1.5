@@ -21,17 +21,24 @@ client = discord.Client()
 
 # The routine for stream alerts, the current interval is 60s
 async def alerts(interval):
-    old_streams = None
+    # this block executes only once
+    await Stream_Database.updatestreamlists()
+    alerter = Stream_Alerts.alert_generator()
+    alerts = next(alerter)
+    old_streams = alerts['streams']
     while True:
-        await Stream_Database.updatestreamlists()
-        print('streams updated')
-        alerts = Stream_Alerts.alert_generator(old_streams)
-        print(alerts['messages'])
-        old_streams = alerts['servers']
-        for message in alerts['messages']:
-            await client.send_message(client.get_channel(message['channel']),
-                                      embed=message['embed'])
         await asyncio.sleep(interval)
+        await Stream_Database.updatestreamlists()
+        next(alerter)
+        alerts = alerter.send(old_streams)
+        old_streams = alerts['streams']
+        # ~1/300 messages fail to send, this catches that to avoid a crash
+        try:
+            for message in alerts['messages']:
+                channel = client.get_channel(message['channel'])
+                await client.send_message(channel, embed=message['embed'])
+        except:
+            print("message failed to send...")
 client.loop.create_task(alerts(60))
 # All of these functions return a discord.Embed object.
 # They're called if a message starts with the key.
