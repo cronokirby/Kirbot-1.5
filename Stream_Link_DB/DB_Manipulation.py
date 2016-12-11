@@ -93,18 +93,18 @@ def fetchserverinfo(serverid):
         return serverinfo
 
 
-# Updates the live_stream list of every server
+# iterates over all the servers, and adds a list of all streams currently Live
+# to their live_streams list. The bot calls this directly.
 async def updatestreamlists():
-    # All the streams shared by servers
-    streams_to_query = [stream for stream in Data['data']['stream_query']]
-    # One call to twitch for all servers
-    stream_info = await fetchstreaminfolist(streams_to_query)
+    print('updating streams...')
+    query_list = [stream for stream in Data['data']['stream_query']]
+    # This is the data for the streams shared by all servers
+    full_stream_info = await fetchstreaminfolist(query_list)
     for server in Data['data']['enabledservers']:
-        stream_list = Data['data'][server]['streamlist']
-        # This filters out the streams not in the server.
-        live_streams = [stream for stream in stream_info
+        stream_list = Data['data']['servers'][server]['streamlist']
+        live_streams = [stream for stream in full_stream_info
                         if stream['twitch_name'] in set(stream_list)]
-        Data['data'][server]['live_streams'] = live_streams
-    with open(SLDataBase, 'w') as fp:
-        json.dump(Data, fp)
+        Data['data']['servers'][server]['live_streams'] = live_streams
+        with open(SLDataBase, 'w') as fp:
+            json.dump(Data, fp)
         
