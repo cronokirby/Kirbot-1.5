@@ -4,9 +4,10 @@ This Database serves to act as a link between Discord Names, and twitch names.
 Ideally, the database should only be opened in this module.
 """
 import json
+import sys
 import os
 # Twich api functions, for live_streams
-from Twitch_API import fetchstreaminfolist
+from Twitch_API import fetchstreaminfolist, findgame
 # this changes the directory to the directory of the script
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -20,10 +21,11 @@ with open(SLDataBase) as fp:
 # serverid must be a string, in this, and all functions that use serverid
 def registerserver(serverid):
     if not(serverid in Data['data']['registeredservers']):
-        Dict = {'streamlist': [],
-                'live_streams': [],
-                'channel': None}
-        Data['data']['servers'][serverid] = Dict
+        default_info = {'streamlist': [],
+                        'live_streams': [],
+                        'channel': None,
+                        'filters': {'enabled': False, 'list': []}}
+        Data['data']['servers'][serverid] = default_info
         Data['data']['registeredservers'].append(serverid)
         with open(SLDataBase, 'w') as fp:
             json.dump(Data, fp)
@@ -66,9 +68,12 @@ def disableserver(serverid):
 def addstream(serverid, twitchname):
     if not(twitchname in set(Data['data']['servers'][serverid]['streamlist'])):
         Data['data']['servers'][serverid]['streamlist'].append(twitchname)
-        # if the name isn't in the query, .get returns 0
-        name_count = 1 + (Data['data']['stream_query'].get(twitchname, 0))
-        Data['data']['stream_query'][twitchname] = name_count
+        # each value represents the servers it is in
+        if twitchname in set(Data['data']['stream_query']):
+            Data['data']['stream_query'][twitchname] += 1
+        # this happens if it's not in the query => one server
+        else:
+            Data['data']['stream_query'][twitchname] = 1
         with open(SLDataBase, 'w') as fp:
             json.dump(Data, fp)
 
@@ -76,12 +81,53 @@ def addstream(serverid, twitchname):
 def removestream(serverid, twitchname):
     if twitchname in set(Data['data']['servers'][serverid]['streamlist']):
         Data['data']['servers'][serverid]['streamlist'].remove(twitchname)
-        if Data['data']['stream_query'][twitchname] == 1:
-            Data['data']['stream_query'].pop(twitchname)
-        else:
+        if Data['data']['stream_query'][twitchname] > 1:
             Data['data']['stream_query'][twitchname] -= 1
+        else:
+            Data['data']['stream_query'].pop(twitchname)
         with open(SLDataBase, 'w') as fp:
             json.dump(Data, fp)
+
+
+# enables game filtering for stream alerts in that server
+def togglefilters(serverid, boolean):
+    Data['data']['servers'][serverid]['filters']['enabled'] = boolean
+    with open(SLDataBase, 'w') as fp:
+        json.dump(Data, fp)
+
+
+# returns info about the above boolean
+def is_enabled(serverid):
+    return Data['data']['servers'][serverid]['filters']['enabled']
+
+
+# adds a new filter to a server's list
+# to avoid junk games in the db, game filtering is done at this level
+async def addfilter(serverid, gamename):
+    # this is False if the game doesn't exist
+    twitchname = await findgame(gamename)
+    if twitchname:
+        if gamename not in set(Data['data']['servers'][serverid]
+                               ['filters']['list']):
+            Data['data']['servers'][serverid]['filters']['list'].append(
+                twitchname)
+            with open(SLDataBase, 'w') as fp:
+                json.dump(Data, fp)
+            return twitchname
+    return False
+
+
+# does the exist opposite. returns a bool noting operation success
+def removefilter(serverid, gamename):
+    if gamename in set(Data['data']['servers'][serverid]['filters']['list']):
+        Data['data']['servers'][serverid]['filters']['list'].remove(gamename)
+        return True
+    else:
+        return False
+
+
+def getfilters(serverid):
+    return Data['data']['servers'][serverid]['filters']['list']
 
 
 def fetchenabledservers():
@@ -104,7 +150,11 @@ async def updatestreamlists():
         stream_list = Data['data']['servers'][server]['streamlist']
         live_streams = [stream for stream in full_stream_info
                         if stream['twitch_name'] in set(stream_list)]
+        if Data['data']['servers'][server]['filters']['enabled']:
+            filters = Data['data']['servers'][server]['filters']['list']
+            live_streams = [stream for stream in live_streams
+                            if stream['game'] in set(filters)]
         Data['data']['servers'][server]['live_streams'] = live_streams
         with open(SLDataBase, 'w') as fp:
             json.dump(Data, fp)
-        
+    print('streams updated!')
