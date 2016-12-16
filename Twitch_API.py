@@ -4,10 +4,18 @@ This module interacts with Twitch's API to fetch info about streams.
 # used to calculate the elapsed time of a stream
 from datetime import datetime
 import aiohttp
-
+# these 2 are for parsing the config file
+import os
+import json
+# this changes the directory to the directory of the script
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+with open('config.json') as fp:
+    Client_ID = json.load(fp)['twitchclientid']
 # the header used for requests
 headers = {'content-type': 'application/json',
-           'Client-ID': '5jpipg7isa4syna5k9jyzmfxi4xtlj9'}
+           'Client-ID': Client_ID}
 
 
 # Check if a stream exists, returns 'Live', 'Offline', 'False': doesn't exist.
@@ -76,7 +84,7 @@ async def fetchstreaminfo(name):
 
 # used to fetch multiple streams at once
 async def fetchstreaminfolist(name_list):
-    url = 'https://api.twitch.tv/kraken/streams?channel='
+    url = 'https://api.twitch.tv/kraken/streams?limit=100&channel='
     url += ','.join(name_list)
     async with aiohttp.ClientSession() as client:
         async with client.get(url=url, headers=headers) as r:
@@ -110,5 +118,20 @@ async def fetchstreaminfolist(name_list):
             'logo' : stream_info["channel"]["logo"]}
 
         streams.append(Info)
-
     return streams
+
+
+# returns the twitchname if it exists, false otherwise
+async def findgame(gamename):
+    gamename = gamename.replace(" ", "+")
+    url = "https://api.twitch.tv/kraken/search/games?q={}&type=suggest".format(
+        gamename)
+    async with aiohttp.ClientSession() as client:
+        async with client.get(url=url, headers=headers) as r:
+            Data = await r.json()
+    print(Data)
+    games = Data['games']
+    if len(games) == 0:
+        return False
+    else:
+        return Data['games'][0]['name']

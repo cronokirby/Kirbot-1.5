@@ -17,8 +17,18 @@ async def test(author, message):
     return Embed
 
 
-async def search(author, message):
+async def notes(author, message):
+    msg = "{}, here's a list of guides for ff1:\n".format(author.name)
+    url = "http://www.speedrun.com/ff1/guides"
+    Embed = discord.Embed(description=msg,
+                          colour=0x42eef4,
+                          url=url,
+                          title=url)
+    Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
+    return Embed
 
+
+async def search(author, message):
     # Because the correct syntax is "!search game"
     name = message.content.split(' ', 1)[-1]
     abb = await fetchabbreviation(name)
@@ -109,7 +119,7 @@ async def time(author, message):
 
     if len(message.content.split('"')) > 1:
         game_name = message.content.split('"')[1]
-        game = fetchabbreviation(game_name)
+        game = await fetchabbreviation(game_name)
         category = message.content.split('"')[2][1:]
         command = message.content.split('"')[0][:-1]
         rank = int(command[1:-2])

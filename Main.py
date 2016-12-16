@@ -3,6 +3,9 @@ import asyncio
 import re
 import logging
 import emoji
+# these 2 are just to parse the config file
+import json
+import os
 # commands
 import Commands
 import Chrono_Commands
@@ -10,6 +13,8 @@ import Chrono_Commands
 import Permissions_DB.Permission_Commands as PermCommands
 # stream commands
 import Stream_Link_DB.DB_Commands as StreamCommands
+# filter commands
+import Stream_Link_DB.Filter_Commands as FilterCommands
 # to update the stream database every minute
 import Stream_Link_DB.DB_Manipulation as Stream_Database
 import Stream_Link_DB.Stream_Alerts as Stream_Alerts
@@ -40,16 +45,19 @@ async def alerts(interval):
         except:
             print("message failed to send...")
 client.loop.create_task(alerts(60))
+
 # All of these functions return a discord.Embed object.
 # They're called if a message starts with the key.
 EmbedCommands = {
+    '!notes': Commands.notes,
     "!test": Commands.test,
     "!categories": Commands.categories,
     "!search": Commands.search,
     "!wr": Commands.wr,
     "!streaminfo": Commands.streaminfo,
     "!permissions": PermCommands.permissions,
-    "!streams": StreamCommands.streams}
+    "!streams": StreamCommands.streams,
+    "!filters": FilterCommands.filters}
 
 
 @client.event
@@ -68,8 +76,9 @@ async def on_message(message):
     for command, function in EmbedCommands.items():
         if message.content.startswith(command):
             Embed = await function(author, message)
-            Embed.set_footer(text=message.content)
-            await client.send_message(message.channel, embed=Embed)
+            if Embed is not None:
+                Embed.set_footer(text=message.content)
+                await client.send_message(message.channel, embed=Embed)
 
     # Example: !1st !2nd !3rd
     TimeCommandREGEX = re.compile("!\d+[nsrt][tdh]|!-\d+[nsrt][tdh]")
@@ -78,5 +87,12 @@ async def on_message(message):
         Embed.set_footer(text=message.content)
         await client.send_message(message.channel, embed=Embed)
 
-# This is the oauth token
-client.run(# supply your own)
+
+# this changes the directory to the directory of the script
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+with open('config.json') as fp:
+    Oauth = json.load(fp)['discord_oauth']
+# start running the bot with the Oauth key
+client.run(Oauth)
