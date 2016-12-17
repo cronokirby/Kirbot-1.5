@@ -12,18 +12,7 @@ from Twitch_API import fetchstreaminfo
 
 async def test(author, message):
     msg = '{}, what is a *test* ? :whale2:'.format(author.name)
-    Embed = discord.Embed(description=msg, colour=0x42eef4)
-    Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
-    return Embed
-
-
-async def notes(author, message):
-    msg = "{}, here's a list of guides for ff1:\n".format(author.name)
-    url = "http://www.speedrun.com/ff1/guides"
-    Embed = discord.Embed(description=msg,
-                          colour=0x42eef4,
-                          url=url,
-                          title=url)
+    Embed = discord.Embed(description=msg, colour=0x42eef4, title="")
     Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
     return Embed
 
