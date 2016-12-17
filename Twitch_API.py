@@ -10,8 +10,7 @@ import json
 # this changes the directory to the directory of the script
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-os.chdir(dname)
-with open('config.json') as fp:
+with open(os.path.join(dname, 'config.json')) as fp:
     Client_ID = json.load(fp)['twitchclientid']
 # the header used for requests
 headers = {'content-type': 'application/json',
