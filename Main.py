@@ -18,6 +18,9 @@ import Stream_Link_DB.Filter_Commands as FilterCommands
 # to update the stream database every minute
 import Stream_Link_DB.DB_Manipulation as Stream_Database
 import Stream_Link_DB.Stream_Alerts as Stream_Alerts
+# For custom commands
+import Custom_Commands.CC_Commands as Custom_Commands
+import Custom_Commands.CC_DB_manipulation as Customs_DB
 # setting up error logging (for the Discord api)
 logging.basicConfig(level=logging.INFO)
 
@@ -57,7 +60,8 @@ EmbedCommands = {
     "!streaminfo": Commands.streaminfo,
     "!permissions": PermCommands.permissions,
     "!streams": StreamCommands.streams,
-    "!filters": FilterCommands.filters}
+    "!filters": FilterCommands.filters,
+    "!commands": Custom_Commands.commands}
 
 
 @client.event
@@ -79,6 +83,16 @@ async def on_message(message):
             if Embed is not None:
                 Embed.set_footer(text=message.content)
                 await client.send_message(message.channel, embed=Embed)
+
+    # this get a list of custom commands in this server, and handles matches
+    serverid = message.server.id
+    if serverid not in Customs_DB.getregisteredservers():
+        Customs_DB.cc_registerserver(serverid)
+    for command in Customs_DB.getcommands(serverid):
+        if message.content.startswith('?' + command):
+            Embed = Customs_DB.constructembed(serverid, command)
+            Embed.set_footer(text=message.content)
+            await client.send_message(message.channel, embed=Embed)
 
     # Example: !1st !2nd !3rd
     TimeCommandREGEX = re.compile("!\d+[nsrt][tdh]|!-\d+[nsrt][tdh]")
