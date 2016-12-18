@@ -9,10 +9,9 @@ import os
 # this changes the directory to the directory of the script
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-os.chdir(dname)
 
-SLDataBase = ('Permission_Database.json')
-with open(SLDataBase) as fp:
+Perm_DataBase = os.path.join(dname, 'Permission_Database.json')
+with open(Perm_DataBase) as fp:
     Data = json.load(fp)
 
 
@@ -24,7 +23,7 @@ def Pregisterserver(serverid):
                 '3': {'rank': 0, 'name': '@everyone'}}
         Data['data']['servers'][serverid] = Dict
         Data['data']['registeredservers'].append(serverid)
-        with open(SLDataBase, 'w') as fp:
+        with open(Perm_DataBase, 'w') as fp:
             json.dump(Data, fp)
         return True
     else:
@@ -36,7 +35,7 @@ def Premoveserver(serverid):
     if serverid in Data['data']['registeredservers']:
         Data['data']['registeredservers'].remove(serverid)
         Data['data']['servers'].pop(serverid, None)
-        with open(SLDataBase, 'w') as fp:
+        with open(Perm_DataBase, 'w') as fp:
             json.dump(Data, fp)
         return True
     else:
@@ -49,7 +48,7 @@ def setpermissionlevel(serverid, level, position, rolename):
     # level has to be 1,2,3 or you'll get a key error
     Info = {'rank': position, 'name': rolename}
     Data['data']['servers'][serverid][str(level)] = Info
-    # now all higher levels need to be higher
+    # now all higher levels need to be higher, and all lower levels as low
     for higherlevel in range(level + 1, 4):
         rank = Data['data']['servers'][serverid][str(higherlevel)]['rank']
         if rank < position:
@@ -58,6 +57,9 @@ def setpermissionlevel(serverid, level, position, rolename):
         rank = Data['data']['servers'][serverid][str(lowerlevel)]['rank']
         if rank > position:
             Data['data']['servers'][serverid][str(lowerlevel)] = Info
+
+    with open(Perm_DataBase, 'w') as fp:
+        json.dump(Data, fp)
 
 
 # Pulls the relevant info of a server

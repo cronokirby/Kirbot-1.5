@@ -5,8 +5,7 @@ messages. The database isn't actually modified here
 # for creating Embeds
 import discord
 
-from Permissions_DB.Permission_Commands import badpermissionembed
-from Permissions_DB.Perm_DB_Manipulation import checkpermissions
+from Permissions_DB.Permission_Commands import permission_check
 from Custom_Commands.CC_DB_manipulation import (cc_registerserver, addcommand,
                                                 editparam, constructembed,
                                                 removecommand, getcommands,
@@ -34,9 +33,8 @@ def non_existant_command_embed(command_name, server):
 
 
 # adds a new command to the server
+@permission_check(permission_level)
 def newcommand(server, requester, command_name, description):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     # the command already exists, user probably doesn't want to reset
     if command_name in getcommands(server.id):
         description = "`{}` already exists in `{}`\n".format(
@@ -54,9 +52,8 @@ def newcommand(server, requester, command_name, description):
         return Embed
 
 
+@permission_check(permission_level)
 def remove(server, requester, command_name):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     if command_name in getcommands(server.id):
         removecommand(server.id, command_name)
         description = "`{}` was deleted from `{}`".format(
@@ -67,9 +64,8 @@ def remove(server, requester, command_name):
         return non_existant_command_embed(command_name, server)
 
 
+@permission_check(permission_level)
 def addfields(server, requester, command_name, fields):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     if command_name in getcommands(server.id):
         print(fields)
         appendfields(server.id, command_name, fields)
@@ -78,9 +74,8 @@ def addfields(server, requester, command_name, fields):
         return non_existant_command_embed(command_name, server)
 
 
+@permission_check(permission_level)
 def removefld(server, requester, command_name, index):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     if command_name in getcommands(server.id):
         removefield(server.id, command_name, index)
         return constructembed(server.id, command_name)
@@ -89,9 +84,8 @@ def removefld(server, requester, command_name, index):
 
 
 # every param is formatted like {'param': 'color', 'value': 0x000000}
+@permission_check(permission_level)
 def edit(server, requester, command_name, params):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     if command_name in getcommands(server.id):
         for param in params:
             editparam(server.id, command_name, param['param'], param['value'])
@@ -127,11 +121,11 @@ def info():
                   'The correct syntax for this command is: '
                   '`!commands new command_name message goes here`')
     field2desc = ('This command removes a command from the list, '
-                  'if it exists.\nThe correct syntax for thsi command is: '
+                  'if it exists.\nThe correct syntax for this command is: '
                   '`!commands remove command_name`')
     field3desc = ('This command edits a preexisting command.\n'
                   'The parameters this command can take are '
-                  '`title()`, `description()`, and `color()`. '
+                  '`title()`, `description()`, `url()`, and `color()`. '
                   'You can include any of them in the command. '
                   'Use `!commands colors` for a list of colors.\n'
                   'The correct syntax for this command is: '
@@ -139,11 +133,11 @@ def info():
                   'description(new description) color(mint)`')
     field4desc = ('Fields have a title, and a value. Use this command to '
                   'add fields to your command.\nThe correct syntax for this '
-                  'command is: `!commands add command_name '
+                  'command is: `!commands addfields command_name '
                   'title(new title) value(new value) title(new title)`')
     field5desc = ('You can remove fields by index (starting at 0) with '
                   'this command.\nThe correct syntax for this command is: '
-                  '`!commands remove command_name 0`')
+                  '`!commands delfield command_name 0`')
     field6desc = ('This command returns a list of all the commands in this '
                   'server.')
     fields = [{'title': '`!commands new`', 'value': field1desc},

@@ -6,14 +6,13 @@ Filters are used to make stream alerts more exclusive
 # for creating Embed
 import discord
 
-
 from Permissions_DB.Permission_Commands import badpermissionembed
 from Permissions_DB.Perm_DB_Manipulation import checkpermissions
 from Stream_Link_DB.DB_Manipulation import (addfilter, removefilter,
                                             getfilters, is_enabled,
                                             registerserver, togglefilters)
 
-permission_level = 1
+permission_level = 2
 
 
 # adds a new filter to a server, the discord.server object is passed
@@ -74,7 +73,7 @@ def list_filters(server):
 
 # This returns an Embed object with info about these commands
 def info():
-    title = '!Filters info'
+    title = '!filters info'
     description = ('Kirbot has the ability to only alert streams that are '
                    'playing certain games, via *filters*: '
                    "if filters are enabled, streams not playing any of the "

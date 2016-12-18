@@ -5,16 +5,17 @@ All of these commands are of permission level 1
 """
 import discord
 # to check if streams exist mainly
-from Twitch_API import fetchstreaminfolist
+from Twitch_API import findstream
 
-from Permissions_DB.Permission_Commands import badpermissionembed
+from Permissions_DB.Permission_Commands import (permission_check,
+                                                badpermissionembed)
 from Permissions_DB.Perm_DB_Manipulation import checkpermissions
 from Stream_Link_DB.DB_Manipulation import (addstream, removestream,
                                             fetchserverinfo,
                                             enableserver, disableserver,
                                             registerserver)
 # the permission level for certain commands here
-permission_level = 1
+permission_level = 2
 
 
 # you need to pass the server object through this function
@@ -49,7 +50,7 @@ def info():
     title = 'Stream Commands info'
     description = ('Kirbot has the ability to keep track of a list of streams '
                    'in every server, and give alerts when they go live\n'
-                   'only `!streams live`, `!streams info`, and `!streams list`'
+                   'Only `!streams live`, `!streams info`, and `!streams list`'
                    ' are available '
                    'to everyone. The other commands need permission level 1\n'
                    'Use `!permissions info` for more info on permissions\n'
@@ -104,15 +105,17 @@ def streamcount(server):
 
 # if the user does !streams add, list will be of size 1
 async def addstreams(server, requester, streams_to_add):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     # Won't fetch names that aren't on twitch
-    print(streams_to_add)
-    stream_info_list = await fetchstreaminfolist(streams_to_add)
-    valid_streams = [strm['twitch_name'] for strm in stream_info_list]
+    valid_streams = []
+    for name in streams_to_add:
+        Exists = await findstream(name)
+        if Exists:
+            valid_streams.append(name)
     invalid_streams = [name for name in streams_to_add
                        if not(name in set(valid_streams))]
-
+    # because we await something, we can't wrap this function
+    if checkpermissions(server.id, permission_level, requester) is False:
+        return badpermissionembed(server, permission_level)
     for twitch_name in valid_streams:
         addstream(server.id, twitch_name)
 
@@ -135,9 +138,8 @@ async def addstreams(server, requester, streams_to_add):
     return Embed
 
 
+@permission_check(permission_level)
 def remove(server, requester, stream_name):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     if stream_name in set(fetchserverinfo(server.id)['streamlist']):
         removestream(server.id, stream_name)
         color = 0x42eef4
@@ -151,9 +153,8 @@ def remove(server, requester, stream_name):
     return Embed
 
 
-def enable(server, channel, requester):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
+@permission_check(permission_level)
+def enable(server, requester, channel):
     enableserver(server.id, channel.id)
     S = ('Kirbot will now tell you when streams go live in `{}`\n'
          'If you want me to alert you in a different channel, use'
@@ -164,9 +165,8 @@ def enable(server, channel, requester):
     return Embed
 
 
+@permission_check(permission_level)
 def disable(server, requester):
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
     disableserver(server.id)
     S = ('Kirbot will no longer alert streams.\n'
          'To reenable this feauture, use '
@@ -192,7 +192,7 @@ async def streams(author, message):
         return streamcount(server)
     # !streams enable
     elif args[1] == 'enable':
-        return enable(server, channel, author)
+        return enable(server, author, channel)
     # !streams disable
     elif args[1] == 'disable':
         return disable(server, author)

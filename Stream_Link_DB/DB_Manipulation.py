@@ -4,16 +4,14 @@ This Database serves to act as a link between Discord Names, and twitch names.
 Ideally, the database should only be opened in this module.
 """
 import json
-import sys
 import os
 # Twich api functions, for live_streams
 from Twitch_API import fetchstreaminfolist, findgame
 # this changes the directory to the directory of the script
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-os.chdir(dname)
 
-SLDataBase = ('Stream_Link_Database.json')
+SLDataBase = os.path.join(dname, 'Stream_Link_Database.json')
 with open(SLDataBase) as fp:
     Data = json.load(fp)
 

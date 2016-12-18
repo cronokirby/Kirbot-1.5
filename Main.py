@@ -21,6 +21,8 @@ import Stream_Link_DB.Stream_Alerts as Stream_Alerts
 # For custom commands
 import Custom_Commands.CC_Commands as Custom_Commands
 import Custom_Commands.CC_DB_manipulation as Customs_DB
+# For message logging
+import Logging.Logger as Logger
 # setting up error logging (for the Discord api)
 logging.basicConfig(level=logging.INFO)
 
@@ -52,7 +54,6 @@ client.loop.create_task(alerts(60))
 # All of these functions return a discord.Embed object.
 # They're called if a message starts with the key.
 EmbedCommands = {
-    '!notes': Commands.notes,
     "!test": Commands.test,
     "!categories": Commands.categories,
     "!search": Commands.search,
@@ -100,6 +101,15 @@ async def on_message(message):
         Embed = await Commands.time(author, message)
         Embed.set_footer(text=message.content)
         await client.send_message(message.channel, embed=Embed)
+
+    if message.content.startswith("!!log"):
+        message_log = []
+        async for msg in client.logs_from(message.channel, limit=100000000):
+            message_log.append(msg)
+        filename = message.server.name + '_' + message.channel.name + '.txt'
+        Logger.log_messages(message_log, filename)
+        await client.send_file(message.channel, filename)
+        os.remove(filename)
 
 
 # this changes the directory to the directory of the script

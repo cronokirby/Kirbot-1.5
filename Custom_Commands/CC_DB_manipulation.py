@@ -11,10 +11,9 @@ import discord
 # this changes the directory to the directory of this script
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-os.chdir(dname)
 
-SLDataBase = ('CC_Database.json')
-with open(SLDataBase) as fp:
+CC_DataBase = os.path.join(dname, 'CC_Database.json')
+with open(CC_DataBase) as fp:
     Data = json.load(fp)
 
 
@@ -23,7 +22,7 @@ def cc_registerserver(serverid):
     if serverid not in Data['data']['registeredservers']:
         Data['data']['servers'][serverid] = {}
         Data['data']['registeredservers'].append(serverid)
-        with open(SLDataBase, 'w') as fp:
+        with open(CC_DataBase, 'w') as fp:
             json.dump(Data, fp)
         return True
     else:
@@ -35,7 +34,7 @@ def cc_removeserver(serverid):
     if serverid in Data['data']['registeredservers']:
         Data['data']['registeredservers'].remove(serverid)
         Data['data']['servers'].pop(serverid, None)
-        with open(SLDataBase, 'w') as fp:
+        with open(CC_DataBase, 'w') as fp:
             json.dump(Data, fp)
         return True
     else:
@@ -51,19 +50,19 @@ def addcommand(serverid, name, description):
             "color": 0x42eef4,
             "url": ""}
     Data['data']['servers'][serverid][name] = info
-    with open(SLDataBase, 'w') as fp:
+    with open(CC_DataBase, 'w') as fp:
         json.dump(Data, fp)
 
 
 def editparam(serverid, name, param, new_value):
     Data['data']['servers'][serverid][name][param] = new_value
-    with open(SLDataBase, 'w') as fp:
+    with open(CC_DataBase, 'w') as fp:
         json.dump(Data, fp)
 
 
 def removecommand(serverid, name):
     success = Data['data']['servers'][serverid].pop(name, False)
-    with open(SLDataBase, 'w') as fp:
+    with open(CC_DataBase, 'w') as fp:
         json.dump(Data, fp)
     return success
 
@@ -82,13 +81,13 @@ def constructembed(serverid, name):
 def appendfields(serverid, command_name, fields):
     if fields is not None:
         Data['data']['servers'][serverid][command_name]['fields'] += fields
-    with open(SLDataBase, 'w') as fp:
+    with open(CC_DataBase, 'w') as fp:
         json.dump(Data, fp)
 
 
 def removefield(serverid, command_name, index):
     Data['data']['servers'][serverid][command_name]['fields'].pop(index)
-    with open(SLDataBase, 'w') as fp:
+    with open(CC_DataBase, 'w') as fp:
         json.dump(Data, fp)
 
 

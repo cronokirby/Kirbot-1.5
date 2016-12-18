@@ -10,6 +10,8 @@ import discord
 # Database functions
 from Permissions_DB.Perm_DB_Manipulation import fetchserverinfo,\
     setpermissionlevel, Pregisterserver, checkpermissions
+# the permission level for certain commands here
+permission_level = 3
 
 
 # Sorts a set of Discord roles by their position
@@ -21,12 +23,38 @@ def hierarchise(roles):
 
 # This is an embed returned if the permissions of a user aren't sufficient
 def badpermissionembed(server, level):
+    level = str(level)
     required_role = fetchserverinfo(server.id)[level]['name']
-    description = ("Woops, you don't have permission to use level {} commands"
+    description = ("Woops, you don't have permission to use level {} commands "
                    "in {}.\nYou must be of rank `{}` or higher to access those"
-                   "commands\nFor more info, use `!permissions list`").format(
+                   " commands\nFor more info, use `!permissions list`").format(
         level, server.name, required_role)
     Embed = discord.Embed(description=description, colour=0xb01e1e)
+    return Embed
+
+
+def permission_check(level):
+    """
+    a decorator that checks if the user meets a required perm level
+    If so, the function executes normally, otherwise, the "badpermissionembed"
+    is returned instead. server, requester need to be the first 2 args of the
+    decorated function
+    """
+    def decorator(function):
+        def checker(*args):
+            server = args[0]
+            requester = args[1]
+            if checkpermissions(server.id, level, requester):
+                return function(*args)
+            else:
+                return badpermissionembed(server, level)
+        return checker
+    return decorator
+
+
+@permission_check(permission_level)
+def test(server, requester):
+    Embed = discord.Embed(description="test", colour=0x42eef4)
     return Embed
 
 
@@ -47,7 +75,8 @@ def info():
                   " as well as the minimum Role for each level.\n"
                   "The correct syntax for this command is:\n"
                   "`!permissions list`")
-    level1commands = ('`!addstream`')
+    level1commands = ('`!streams add`, `!streams adds`, `!streams enable`'
+                      '`!streams disable`')
     level2commands = ('`!permissions set`')
     fields = [{'title': '`!permissions set`:',
                'value': field1desc},
@@ -70,9 +99,8 @@ def info():
 
 # Not to be confused with 'setpermissionlevel'!
 # This returns an Embed object for the user, AND runs 'setpermissionlevel'
-def permissionset(server, level, position, rolename, requestinguser):
-    if checkpermissions(server.id, 2, requestinguser) is False:
-        return badpermissionembed(server, 2)
+@permission_check(permission_level)
+def permissionset(server, requester, level, position, rolename):
     setpermissionlevel(server.id, level, position, rolename)
     S = ('Permission level {} is now set to `{}`, or higher.\n'
          'Use !permissions list for the role hierarchy.').format(
@@ -113,7 +141,7 @@ def permissionlist(server):
 
 # this is the function that the message will trigger
 # it directs to one of the above functions based on the 2nd argument
-def permissions(author, message):
+async def permissions(author, message):
     server = message.server
     server_roles = server.roles
     Pregisterserver(server.id)
@@ -149,7 +177,7 @@ def permissions(author, message):
             return Embed
         # Now, we have checked for all the errors
         # reminder that this returns an Embed object
-        return permissionset(server, args[2], rank, args[3], author)
+        return permissionset(server, author, args[2], rank, args[3])
     # !permissions list
     elif args[1] == 'list':
         return permissionlist(server)
