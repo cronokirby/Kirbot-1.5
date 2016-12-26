@@ -10,14 +10,29 @@ from Speedrun_API import fetchabbreviation, fetchcategories, fetchtime
 from Twitch_API import fetchstreaminfo
 
 
-async def test(author, message):
+def embed_command():
+    def decorator(function):
+        async def wrapper(*args):
+            client = args[0]
+            message = args[2]
+            embed = await function(*args)
+            await client.send_message(message.channel, embed=embed)
+        return wrapper
+    return decorator
+
+
+@embed_command()
+async def test(client, author, message):
     msg = '{}, what is a *test* ? :whale2:'.format(author.name)
     Embed = discord.Embed(description=msg, colour=0x42eef4, title="")
     Embed.set_thumbnail(url="http://imgur.com/dU6KiDb.png")
+    Embed.set_author(name=author.name, icon_url=author.avatar_url)
+    print(Embed.to_dict())
     return Embed
 
 
-async def search(author, message):
+@embed_command()
+async def search(client, author, message):
     # Because the correct syntax is "!search game"
     name = message.content.split(' ', 1)[-1]
     abb = await fetchabbreviation(name)
@@ -36,7 +51,8 @@ async def search(author, message):
     return Embed
 
 
-async def categories(author, message):
+@embed_command()
+async def categories(client, author, message):
     # checks whether or not the syntax is '!categories abbreviation/"Game Name"
     if len(message.content.split('"')) > 1:
         game_name = message.content.split('"')[1]
@@ -59,7 +75,8 @@ async def categories(author, message):
     return Embed
 
 
-async def wr(author, message):
+@embed_command()
+async def wr(client, author, message):
     if len(message.content.split('"')) > 1:
         game_name = message.content.split('"')[1]
         game = await fetchabbreviation(game_name)
@@ -104,7 +121,8 @@ async def wr(author, message):
     return Embed
 
 
-async def time(author, message):
+@embed_command()
+async def time(client, author, message):
 
     if len(message.content.split('"')) > 1:
         game_name = message.content.split('"')[1]
@@ -188,7 +206,8 @@ async def time(author, message):
     return Embed
 
 
-async def streaminfo(author, message):
+@embed_command()
+async def streaminfo(client, author, message):
     # example command: !streaminfo cronokirby -> twitch.tv/cronokirby
     name = message.content.split(" ")[1]
     Info = await fetchstreaminfo(name)
