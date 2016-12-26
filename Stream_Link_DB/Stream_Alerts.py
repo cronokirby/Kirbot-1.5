@@ -1,10 +1,15 @@
 """
-This module handles the updating of the streams currently live. The bot
-calls functions from this module at a set interval.
+This module handles the updating of the streams currently live.
+As well as the catching of new streams, and generating messages to send
+in that case
 """
+# for timing the alerter
+import asyncio
 import discord
 # Database functions
-from Stream_Link_DB.DB_Manipulation import fetchenabledservers, fetchserverinfo
+from Stream_Link_DB.DB_Manipulation import (fetchenabledservers,
+                                            fetchserverinfo,
+                                            updatestreamlists)
 
 
 # This gets called periodically in main, feeding it old streams,
@@ -53,3 +58,25 @@ def alert_generator():
                 alert['messages'].append(message)
         print(alert['messages'])
         yield alert
+
+
+# The routine for stream alerts, the current interval is 60s
+async def alerts(client, interval):
+    # this block executes only once
+    await updatestreamlists()
+    alerter = alert_generator()
+    alerts = next(alerter)
+    old_streams = alerts['streams']
+    while True:
+        await asyncio.sleep(interval)
+        await updatestreamlists()
+        next(alerter)
+        alerts = alerter.send(old_streams)
+        old_streams = alerts['streams']
+        # ~1/300 messages fail to send, this catches that to avoid a crash
+        try:
+            for message in alerts['messages']:
+                channel = client.get_channel(message['channel'])
+                await client.send_message(channel, embed=message['embed'])
+        except:
+            print("message failed to send...")

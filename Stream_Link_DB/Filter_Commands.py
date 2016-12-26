@@ -6,6 +6,7 @@ Filters are used to make stream alerts more exclusive
 # for creating Embed
 import discord
 
+from Commands import embed_command
 from Permissions_DB.Permission_Commands import badpermissionembed
 from Permissions_DB.Perm_DB_Manipulation import checkpermissions
 from Stream_Link_DB.DB_Manipulation import (addfilter, removefilter,
@@ -110,7 +111,8 @@ def info():
 
 
 # the message gets sent here if it matches '!filters'
-async def filters(author, message):
+@embed_command()
+async def filters(client, author, message):
     server = message.server
     registerserver(server.id)
     # i.e. !filters keyword arg1 arg2

@@ -7,6 +7,7 @@ import discord
 # to check if streams exist mainly
 from Twitch_API import findstream
 
+from Commands import embed_command
 from Permissions_DB.Permission_Commands import (permission_check,
                                                 badpermissionembed)
 from Permissions_DB.Perm_DB_Manipulation import checkpermissions
@@ -175,7 +176,8 @@ def disable(server, requester):
     return Embed
 
 
-async def streams(author, message):
+@embed_command()
+async def streams(client, author, message):
     server = message.server
     channel = message.channel
     registerserver(server.id)
