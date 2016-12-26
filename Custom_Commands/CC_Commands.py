@@ -5,8 +5,10 @@ messages. The database isn't actually modified here
 # for creating Embeds
 import discord
 
+from Commands import embed_command
 from Permissions_DB.Permission_Commands import permission_check
-from Custom_Commands.CC_DB_manipulation import (cc_registerserver, addcommand,
+from Custom_Commands.CC_DB_manipulation import (cc_registerserver,
+                                                addcommand,
                                                 editparam, constructembed,
                                                 removecommand, getcommands,
                                                 appendfields, removefield)
@@ -169,7 +171,8 @@ def badfieldsyntax():
     return Embed
 
 
-async def commands(author, message):
+@embed_command()
+async def commands(client, author, message):
     server = message.server
     cc_registerserver(server.id)
     content = message.content
