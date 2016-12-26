@@ -1,5 +1,6 @@
 """
 this module is used to construct txt files from a list of messages
+The Embed conversion still needs some working on
 """
 import os
 
