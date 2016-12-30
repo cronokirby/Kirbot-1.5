@@ -5,7 +5,7 @@ import discord
 import os
 import emoji
 # for storing whaled messages
-from Whaled_messages.Whale_DataBase import store_message, is_enabled
+from Whaled_messages.Whale_DataBase import store_message, is_enabled,
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)

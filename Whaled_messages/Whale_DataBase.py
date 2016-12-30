@@ -63,5 +63,11 @@ async def get_random_message(serverid):
     return messages[random_index]
 
 
+def is_registered(serverid):
+    return serverid in Data['data']['registeredservers']
+
 def is_enabled(serverid):
-    return Data['data']['servers'][serverid]['enabled']
+    if is_registered(serverid):
+        return Data['data']['servers'][serverid]['enabled']
+    else:
+        return False
