@@ -8,6 +8,7 @@ called based on the argument.
 # library import
 import discord
 # Database functions
+from Commands import embed_command
 from Permissions_DB.Perm_DB_Manipulation import fetchserverinfo,\
     setpermissionlevel, Pregisterserver, checkpermissions
 # the permission level for certain commands here
@@ -17,7 +18,11 @@ permission_level = 3
 # Sorts a set of Discord roles by their position
 def hierarchise(roles):
     Dict = {role.position : role.name for role in roles}
-    hierarchy = [Dict[i] for i in range(0, len(roles))]
+    hierarchy = []
+    for i in range(0, len(roles)):
+        role = Dict.get(i)
+        if role is not None:
+            hierarchy.append(role)
     return(hierarchy)
 
 
@@ -141,7 +146,8 @@ def permissionlist(server):
 
 # this is the function that the message will trigger
 # it directs to one of the above functions based on the 2nd argument
-async def permissions(author, message):
+@embed_command()
+async def permissions(client, author, message):
     server = message.server
     server_roles = server.roles
     Pregisterserver(server.id)

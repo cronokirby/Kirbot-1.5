@@ -51,7 +51,7 @@ async def on_message(message):
     # This is an object. Name should be fetched with .name, not str(author)!
     author = message.author
     # will add a reaction to the message, if the rng is right
-    await whale(client, author, message)
+    #await whale(client, author, message)
     # This iterates over my dictionary of commands, imported from Commands.
     # The keys are the commands, and what the message needs to start with.
     for command, function in command_list.items():

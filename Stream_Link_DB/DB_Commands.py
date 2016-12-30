@@ -115,8 +115,8 @@ async def addstreams(server, requester, streams_to_add):
     invalid_streams = [name for name in streams_to_add
                        if not(name in set(valid_streams))]
     # because we await something, we can't wrap this function
-    if checkpermissions(server.id, permission_level, requester) is False:
-        return badpermissionembed(server, permission_level)
+    if checkpermissions(server.id, 1, requester) is False:
+        return badpermissionembed(server, 1)
     for twitch_name in valid_streams:
         addstream(server.id, twitch_name)
 
