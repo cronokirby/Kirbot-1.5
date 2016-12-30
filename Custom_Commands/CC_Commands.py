@@ -182,7 +182,7 @@ async def commands(client, author, message):
     elif keyword == 'info':
         return info()
     # !commands new command_name description goes here
-    elif keyword == 'new':
+    elif keyword == 'new' or keyword == 'add':
         args = content.split(' ', 3)
         command_name = args[2]
         description = args[3]
