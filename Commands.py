@@ -31,6 +31,29 @@ async def test(client, author, message):
     return Embed
 
 
+async def join_race(client, author, message):
+    server = message.server
+    # only for FF1 speedruners
+    if server.id == '110099933725487104':
+        race_role = [role for role in server.roles
+                     if role.name == 'Races']
+        await client.add_roles(author, race_role[0])
+        msg = f"{author.name} has joined `Races`"
+        Embed = discord.Embed(description=msg, colour=0x42eef4)
+        await client.send_message(message.channel, embed=Embed)
+
+async def leave_race(client, author, message):
+    server = message.server
+    # only for FF1 speedruners
+    if server.id == '110099933725487104':
+        race_role = [role for role in server.roles
+                     if role.name == 'Races']
+        await client.remove_roles(author, race_role[0])
+        msg = f"{author.name} has left `Races`"
+        Embed = discord.Embed(description=msg, colour=0x42eef4)
+        await client.send_message(message.channel, embed=Embed)
+
+
 @embed_command()
 async def search(client, author, message):
     # Because the correct syntax is "!search game"
@@ -246,22 +269,6 @@ async def streaminfo(client, author, message):
             Embed = discord.Embed(description="", colour=0x9e42f4)
             Embed.set_author(name=Info["display_name"], url=StreamURL)
             Embed.set_thumbnail(url=Info["logo"])
-            Hours = str(Info["uptime"]["Hours"])
-            Minutes = str(Info["uptime"]["Minutes"])
-            HourString = "**{}** hour".format(Hours)
-            MinuteString = "& **{}** minute".format(Minutes)
-            if int(Hours) == 0:
-                HourString = ""
-                MinuteString = MinuteString[2:]
-            # This implies that if int(Hours) == 1, no "s" is needed
-            elif int(Hours) > 1:
-                HourString += "s"
-            if int(Minutes) == 0:
-                MinuteString = ""
-            elif int(Minutes) > 1:
-                MinuteString += "s"
-            # This is a different Uptime, will be used in the iterator.
-            Info["uptime"] = "{} {}".format(HourString, MinuteString)
             for setting, boolean in sorted(settings.items()):
                 if boolean:
                     if setting != "preview":

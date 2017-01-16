@@ -34,6 +34,8 @@ client.loop.create_task(Stream_Alerts.alerts(client, 60))
 # They're called if a message starts with the key.
 command_list = {
     "!test": Commands.test,
+    "!join": Commands.join_race,
+    "!leave": Commands.leave_race,
     "!categories": Commands.categories,
     "!search": Commands.search,
     "!wr": Commands.wr,
@@ -51,7 +53,6 @@ async def on_message(message):
     # This is an object. Name should be fetched with .name, not str(author)!
     author = message.author
     # will add a reaction to the message, if the rng is right
-    #await whale(client, author, message)
     # This iterates over my dictionary of commands, imported from Commands.
     # The keys are the commands, and what the message needs to start with.
     for command, function in command_list.items():

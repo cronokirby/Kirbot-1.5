@@ -17,7 +17,7 @@ permission_level = 3
 
 # Sorts a set of Discord roles by their position
 def hierarchise(roles):
-    Dict = {role.position : role.name for role in roles}
+    Dict = {role.position: role.name for role in roles}
     hierarchy = []
     for i in range(0, len(roles)):
         role = Dict.get(i)

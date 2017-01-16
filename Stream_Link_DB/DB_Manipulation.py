@@ -156,3 +156,4 @@ async def updatestreamlists():
         with open(SLDataBase, 'w') as fp:
             json.dump(Data, fp)
     print('streams updated!')
+    return full_stream_info
